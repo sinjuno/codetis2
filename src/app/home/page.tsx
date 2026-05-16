@@ -81,8 +81,9 @@ function buildBannerItems(connections: Connection[], events: CalendarEvent[]): B
 
   const appointmentItems: BannerItem[] = events
     .map((ev) => {
-      const evDate = new Date(ev.date);
-      const diff = Math.ceil((evDate.getTime() - todayTs) / 86400000);
+      const [y, m, d] = ev.date.split('-').map(Number);
+      const evDate = new Date(y, m - 1, d);
+      const diff = Math.round((evDate.getTime() - todayTs) / 86400000);
       return {
         id: `ev-${ev.id}`,
         type: 'appointment' as const,
