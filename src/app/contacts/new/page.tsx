@@ -25,7 +25,7 @@ async function fetchOneContact(): Promise<{ name: string; phone: string } | null
       return null;
     }
   }
-  return { name: '강하늘', phone: '010-9876-5432' };
+  return null;
 }
 
 export default function NewContactPage() {
@@ -66,7 +66,10 @@ export default function NewContactPage() {
     setImporting(true);
     const contact = await fetchOneContact();
     setImporting(false);
-    if (!contact) return;
+    if (!contact) {
+      showToast('이 기기에서는 연락처 불러오기를 지원하지 않아요.');
+      return;
+    }
     setForm((p) => ({ ...p, name: contact.name, phone: contact.phone }));
     showToast('연락처를 불러왔습니다.');
   };

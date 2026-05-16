@@ -117,6 +117,7 @@ export default function HomePage() {
   const [vcfContacts, setVcfContacts] = useState<{ name: string; phone: string }[]>([]);
   const [selectedVcf, setSelectedVcf] = useState<Set<number>>(new Set());
   const [vcfSaving, setVcfSaving] = useState(false);
+  const [showContactPickerGuide, setShowContactPickerGuide] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -202,8 +203,7 @@ export default function HomePage() {
       'select' in (navigator as any).contacts;
 
     if (!supportsContactPicker) {
-      setShowSyncModal(false);
-      router.push('/contacts/new');
+      setShowContactPickerGuide(true);
       return;
     }
 
@@ -502,6 +502,44 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Contact Picker API 미지원 안내 팝업 */}
+      {showContactPickerGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="w-full max-w-[340px] bg-white rounded-3xl p-7">
+            <div className="flex items-center justify-center w-14 h-14 rounded-2xl mx-auto mb-4" style={{ background: '#fdf0f2' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D6536D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h3 className="text-[17px] font-bold text-picks-dark text-center mb-2">연락처 접근 권한 필요</h3>
+            <p className="text-[13px] text-gray-500 text-center leading-relaxed mb-5">
+              Safari에서 연락처 불러오기를 사용하려면<br />아래 설정을 켜주세요.
+            </p>
+            <div className="bg-gray-50 rounded-2xl px-4 py-4 mb-5">
+              <div className="flex items-start gap-2 mb-2">
+                <span className="text-[13px] font-bold text-picks-rose flex-shrink-0">1.</span>
+                <span className="text-[13px] text-picks-dark"><span className="font-semibold">설정</span> 앱 열기</span>
+              </div>
+              <div className="flex items-start gap-2 mb-2">
+                <span className="text-[13px] font-bold text-picks-rose flex-shrink-0">2.</span>
+                <span className="text-[13px] text-picks-dark"><span className="font-semibold">Safari</span> → <span className="font-semibold">고급</span> → <span className="font-semibold">기능 플래그</span></span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-[13px] font-bold text-picks-rose flex-shrink-0">3.</span>
+                <span className="text-[13px] text-picks-dark"><span className="font-semibold">Contact Picker API</span> 켜기</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowContactPickerGuide(false)}
+              className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white transition-all active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #D6536D 0%, #E43D12 100%)' }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 연락처 연동 모달 */}
       {showSyncModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
@@ -535,17 +573,6 @@ export default function HomePage() {
                     </span>
                   ) : '연락처 앱에서 불러오기'}
                 </button>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-4 rounded-2xl font-semibold text-[15px] mb-3 transition-all active:scale-95 flex items-center justify-center gap-2"
-                  style={{ background: '#fdf0f2', color: '#D6536D' }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />
-                  </svg>
-                  파일로 가져오기 (.vcf)
-                </button>
-                <input ref={fileInputRef} type="file" accept=".vcf" onChange={handleVcfFile} className="hidden" />
                 <button
                   onClick={() => setShowSyncModal(false)}
                   className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-gray-400 bg-gray-100 transition-all active:scale-95"
