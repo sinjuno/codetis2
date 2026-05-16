@@ -123,6 +123,7 @@ export default function SignupPage() {
         name: form.name,
         phone: form.phone,
         birthday: form.birthday,
+        email: data.user.email,
       });
     }
 

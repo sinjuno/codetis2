@@ -239,21 +239,6 @@ export default function MyPage() {
           </Link>
         </div>
 
-        {/* 프로필 링크 공유 */}
-        <div className="px-7 mb-4">
-          <button
-            onClick={handleCopyProfileLink}
-            className="w-full py-3.5 rounded-2xl font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-95"
-            style={{ background: '#fdf0f2', color: '#D6536D' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-            내 프로필 링크 공유하기
-          </button>
-        </div>
-
         {/* Menu items */}
         <div className="px-7 space-y-2">
           {menuItems.map((item) => (
