@@ -239,6 +239,13 @@ export default function MyPage() {
           </Link>
         </div>
 
+        {/* 설정 섹션 구분선 */}
+        <div className="px-7 mt-2 mb-3 flex items-center gap-3">
+          <div className="flex-1 h-px bg-gray-100" />
+          <span className="text-[12px] font-semibold text-gray-400 tracking-wide">설정</span>
+          <div className="flex-1 h-px bg-gray-100" />
+        </div>
+
         {/* Menu items */}
         <div className="px-7 space-y-2">
           {menuItems.map((item) => (
