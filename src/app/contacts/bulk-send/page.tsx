@@ -6,21 +6,56 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
-import type { Connection, MessageTemplate } from '@/lib/types';
+import type { Connection } from '@/lib/types';
+
+const TEMPLATE_DATA: Record<string, string[]> = {
+  '기본 안부': [
+    '안녕하세요! 잘 지내고 계신가요? 요즘 바쁘신 것 같아 연락 못 드렸는데 문득 생각이 나서 연락드립니다 😊',
+    '오랜만에 연락드려요! 요즘 어떻게 지내세요? 별일 없으시죠? 생각나서 인사 드리고 싶었어요.',
+    '안녕하세요 :) 오랜만이에요! 잘 지내고 계신지 궁금해서 연락드렸어요. 편한 시간에 한번 연락 주세요~',
+    '안녕하세요~ 오랜만에 인사드려요. 요즘 어떻게 지내고 계세요? 좋은 하루 보내고 계시길 바랍니다!',
+  ],
+  '친한 친구용': [
+    '야 잘 지내?? ㅋㅋ 요즘 뭐해~ 갑자기 생각나서 연락했어. 오랜만에 한번 만나자!',
+    'ㅋㅋㅋ 갑자기 생각났어ㅎ 뭐해 요즘? 바쁜 거 알지만 한번 보고 싶다~',
+    '헤이~ 잘 지내지?? 오랜만이다 ㅎㅎ 요즘 어떻게 지내? 밥 한번 먹자!',
+    '야 오랜만이야!! 어떻게 지내고 있어? 연락한 지 너무 됐다ㅋㅋ 언제 시간 돼?',
+  ],
+  '어색한 관계용': [
+    '안녕하세요, 오랜만에 연락드립니다. 잘 지내고 계신지 궁금해서 여쭤보고 싶었어요.',
+    '안녕하세요! 오랜만이에요. 문득 생각이 나서 연락드렸어요. 요즘 어떻게 지내세요?',
+    '반갑습니다. 오랜만에 인사드려요. 혹시 요즘 잘 지내고 계신지요? 연락이 뜸해서 안부 여쭤봅니다.',
+    '안녕하세요~ 오랜만에 인사드리고 싶어 연락드렸어요. 요즘 어떻게 지내시는지 궁금했습니다.',
+  ],
+  '대학생 시즌': [
+    '개강했다!! 이번 학기 같은 강의 혹시 있어? 바쁘겠지만 밥 한번 먹자ㅎ',
+    '종강 축하해!! 🎉 방학 때 뭐 할 거야? 오랜만에 한번 보자~ 할 말도 많은데!',
+    '오랜만이야! 학기 시작하고 정신없지? ㅋㅋ 그래도 한번 보고 싶은데 시간 돼?',
+    '시험 기간이라 고생 많지? 😂 끝나면 꼭 보자! 맛있는 거 먹으러 가자~',
+  ],
+  '생일 축하': [
+    '생일 축하해!! 🎂 오늘 하루 정말 특별하게 보내길 바라~ 올해도 건강하고 행복하자!',
+    '생일 축하드립니다! 🎉 항상 건강하고 행복하시길 바랍니다. 좋은 일만 가득하세요~',
+    '생일 축하해요~! 🎁 행복한 하루 보내고 올해도 좋은 일 많이 생기길 바랄게요!',
+    '오늘 생일이죠?? 🎂 축하해!! 오래오래 건강하고 원하는 거 다 이루길 바랄게~',
+  ],
+};
+
+const CATEGORIES = Object.keys(TEMPLATE_DATA);
 
 export default function BulkSendPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
-  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
-  const [templateCategories, setTemplateCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
   const [selectedTemplateIdx, setSelectedTemplateIdx] = useState(0);
-  const [customText, setCustomText] = useState('');
+  const [customText, setCustomText] = useState(TEMPLATE_DATA[CATEGORIES[0]][0]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const templateScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -32,42 +67,29 @@ export default function BulkSendPage() {
     if (!user) return;
     const fetchData = async () => {
       setDataLoading(true);
-      const [{ data: conns }, { data: tmps }] = await Promise.all([
-        supabase.from('connections').select('*').eq('user_id', user.id).order('name'),
-        supabase.from('message_templates').select('*').eq('user_id', user.id).order('created_at'),
-      ]);
+      const { data: conns } = await supabase
+        .from('connections')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
       setConnections((conns as Connection[]) ?? []);
-      const tmpList = (tmps as MessageTemplate[]) ?? [];
-      setTemplates(tmpList);
-      const catSet = new Set(tmpList.map((t) => t.category));
-      const cats = Array.from(catSet);
-      setTemplateCategories(cats);
-      if (cats.length > 0) {
-        setSelectedCategory(cats[0]);
-        const firstCatTemplates = tmpList.filter((t) => t.category === cats[0]);
-        if (firstCatTemplates.length > 0) {
-          setCustomText(firstCatTemplates[0].content);
-        }
-      }
       setDataLoading(false);
     };
     fetchData();
   }, [user]);
 
-  const currentTemplates = templates.filter((t) => t.category === selectedCategory);
+  const currentTemplates = TEMPLATE_DATA[selectedCategory];
 
   const handleCategoryChange = (cat: string) => {
     setSelectedCategory(cat);
     setSelectedTemplateIdx(0);
-    const catTemplates = templates.filter((t) => t.category === cat);
-    if (catTemplates.length > 0) {
-      setCustomText(catTemplates[0].content);
-    }
+    setCustomText(TEMPLATE_DATA[cat][0]);
+    templateScrollRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
   };
 
   const handleTemplateSelect = (idx: number) => {
     setSelectedTemplateIdx(idx);
-    setCustomText(currentTemplates[idx].content);
+    setCustomText(currentTemplates[idx]);
   };
 
   const toggleContact = (id: string) => {
@@ -93,7 +115,6 @@ export default function BulkSendPage() {
     const sentContacts = connections.filter((c) => selectedContacts.has(c.id));
     const failedContacts = connections.filter((c) => !selectedContacts.has(c.id));
 
-    // Log to message_send_logs
     await supabase.from('message_send_logs').insert({
       user_id: user.id,
       template_content: customText,
@@ -138,54 +159,85 @@ export default function BulkSendPage() {
         <div className="px-7">
           <h3 className="text-[15px] font-bold text-picks-dark mb-3">템플릿 선택</h3>
 
-          {dataLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="w-5 h-5 border-2 border-picks-rose border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : (
-            <>
-              {/* Category buttons */}
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
-                {templateCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => handleCategoryChange(cat)}
-                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all"
-                    style={{
-                      background: selectedCategory === cat ? '#D6536D' : 'white',
-                      color: selectedCategory === cat ? 'white' : '#666',
-                      border: selectedCategory === cat ? 'none' : '1.5px solid #e5e5e5',
-                    }}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+          {/* Category scroll */}
+          <div
+            ref={categoryScrollRef}
+            className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4"
+          >
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryChange(cat)}
+                className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all"
+                style={{
+                  background: selectedCategory === cat ? '#D6536D' : 'white',
+                  color: selectedCategory === cat ? 'white' : '#666',
+                  border: selectedCategory === cat ? 'none' : '1.5px solid #e5e5e5',
+                  boxShadow: selectedCategory === cat ? '0 2px 8px rgba(214,83,109,0.3)' : 'none',
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-              {/* Template cards - horizontal scroll */}
-              <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 mb-4">
-                {currentTemplates.map((template, idx) => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleTemplateSelect(idx)}
-                    className="flex-shrink-0 w-56 p-4 rounded-2xl text-left transition-all"
-                    style={{
-                      background: selectedTemplateIdx === idx ? '#D6536D' : 'white',
-                      border: selectedTemplateIdx === idx ? 'none' : '1.5px solid #e5e5e5',
-                      boxShadow: selectedTemplateIdx === idx ? '0 4px 12px rgba(214,83,109,0.3)' : '0 2px 8px rgba(0,0,0,0.06)',
-                    }}
-                  >
-                    <p
-                      className="text-[13px] leading-relaxed"
-                      style={{ color: selectedTemplateIdx === idx ? 'white' : '#444' }}
-                    >
-                      {template.content}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+          {/* Template example cards - horizontal scroll */}
+          <div
+            ref={templateScrollRef}
+            className="flex gap-3 overflow-x-auto scrollbar-hide pb-3 mb-4"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {currentTemplates.map((text, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleTemplateSelect(idx)}
+                className="flex-shrink-0 w-52 p-4 rounded-2xl text-left transition-all"
+                style={{
+                  scrollSnapAlign: 'start',
+                  background: selectedTemplateIdx === idx ? '#D6536D' : 'white',
+                  border: selectedTemplateIdx === idx ? 'none' : '1.5px solid #e5e5e5',
+                  boxShadow: selectedTemplateIdx === idx
+                    ? '0 4px 12px rgba(214,83,109,0.3)'
+                    : '0 2px 8px rgba(0,0,0,0.06)',
+                }}
+              >
+                <p
+                  className="text-[12px] leading-relaxed line-clamp-4"
+                  style={{ color: selectedTemplateIdx === idx ? 'white' : '#444' }}
+                >
+                  {text}
+                </p>
+                {selectedTemplateIdx === idx && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2">
+                      <polyline points="2,6 5,9 10,3" />
+                    </svg>
+                    <span className="text-[10px] text-white font-medium">선택됨</span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Scroll indicator dots */}
+          <div className="flex justify-center gap-1.5 mb-4">
+            {currentTemplates.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  handleTemplateSelect(idx);
+                  const card = templateScrollRef.current?.children[idx] as HTMLElement;
+                  card?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                }}
+                className="rounded-full transition-all"
+                style={{
+                  width: selectedTemplateIdx === idx ? '16px' : '6px',
+                  height: '6px',
+                  background: selectedTemplateIdx === idx ? '#D6536D' : '#e0e0e0',
+                }}
+              />
+            ))}
+          </div>
 
           {/* Editable text */}
           <div>
