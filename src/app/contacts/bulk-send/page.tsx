@@ -51,8 +51,9 @@ export default function BulkSendPage() {
   const [selectedTemplateIdx, setSelectedTemplateIdx] = useState(0);
   const [customText, setCustomText] = useState(TEMPLATE_DATA[CATEGORIES[0]][0]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
-  const [selectAll, setSelectAll] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [activeContactCategory, setActiveContactCategory] = useState('전체');
+  const [contactCategories, setContactCategories] = useState<string[]>(['전체', '친구', '가족', '비즈니스']);
 
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const templateScrollRef = useRef<HTMLDivElement>(null);
@@ -67,18 +68,26 @@ export default function BulkSendPage() {
     if (!user) return;
     const fetchData = async () => {
       setDataLoading(true);
-      const { data: conns } = await supabase
-        .from('connections')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('name');
+      const [{ data: conns }, { data: cats }] = await Promise.all([
+        supabase.from('connections').select('*').eq('user_id', user.id).order('name'),
+        supabase.from('user_categories').select('name').eq('user_id', user.id),
+      ]);
       setConnections((conns as Connection[]) ?? []);
+      const customCats = (cats ?? []).map((c: { name: string }) => c.name);
+      const baseCats = ['전체', '친구', '가족', '비즈니스'];
+      setContactCategories([...baseCats, ...customCats.filter((c: string) => !baseCats.slice(1).includes(c))]);
       setDataLoading(false);
     };
     fetchData();
   }, [user]);
 
   const currentTemplates = TEMPLATE_DATA[selectedCategory];
+
+  const filteredConnections = activeContactCategory === '전체'
+    ? connections
+    : connections.filter((c) => c.category === activeContactCategory);
+
+  const allFilteredSelected = filteredConnections.length > 0 && filteredConnections.every((c) => selectedContacts.has(c.id));
 
   const handleCategoryChange = (cat: string) => {
     setSelectedCategory(cat);
@@ -102,12 +111,19 @@ export default function BulkSendPage() {
   };
 
   const toggleAll = () => {
-    if (selectAll) {
-      setSelectedContacts(new Set());
+    if (allFilteredSelected) {
+      setSelectedContacts((prev) => {
+        const next = new Set(prev);
+        filteredConnections.forEach((c) => next.delete(c.id));
+        return next;
+      });
     } else {
-      setSelectedContacts(new Set(connections.map((c) => c.id)));
+      setSelectedContacts((prev) => {
+        const next = new Set(prev);
+        filteredConnections.forEach((c) => next.add(c.id));
+        return next;
+      });
     }
-    setSelectAll(!selectAll);
   };
 
   const handleSend = async () => {
@@ -258,7 +274,7 @@ export default function BulkSendPage() {
 
         {/* Recipients section */}
         <div className="px-7">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-[15px] font-bold text-picks-dark">전송 대상 선택</h3>
             <button
               onClick={toggleAll}
@@ -266,11 +282,13 @@ export default function BulkSendPage() {
               style={{ color: '#D6536D' }}
             >
               <div
-                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                  selectAll ? 'bg-picks-rose border-picks-rose' : 'border-gray-300'
-                }`}
+                className="w-4 h-4 rounded border-2 flex items-center justify-center transition-colors"
+                style={{
+                  background: allFilteredSelected ? '#D6536D' : 'transparent',
+                  borderColor: allFilteredSelected ? '#D6536D' : '#d1d5db',
+                }}
               >
-                {selectAll && (
+                {allFilteredSelected && (
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="white" strokeWidth="2">
                     <polyline points="1,5 4,8 9,2" />
                   </svg>
@@ -280,13 +298,31 @@ export default function BulkSendPage() {
             </button>
           </div>
 
+          {/* 카테고리 필터 */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-3">
+            {contactCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveContactCategory(cat)}
+                className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all"
+                style={{
+                  background: activeContactCategory === cat ? '#D6536D' : 'white',
+                  color: activeContactCategory === cat ? 'white' : '#666',
+                  border: activeContactCategory === cat ? 'none' : '1.5px solid #e5e5e5',
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-2">
             {dataLoading ? (
               <div className="flex justify-center py-6">
                 <div className="w-5 h-5 border-2 border-picks-rose border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
-              connections.map((contact) => (
+              filteredConnections.map((contact) => (
                 <button
                   key={contact.id}
                   onClick={() => toggleContact(contact.id)}
