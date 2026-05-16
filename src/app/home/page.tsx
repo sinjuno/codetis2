@@ -138,9 +138,15 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!user) return;
-    if (!user.user_metadata?.contact_asked) {
+    if (user.user_metadata?.contact_synced) return;
+    const supportsContactPicker =
+      typeof navigator !== 'undefined' &&
+      'contacts' in navigator &&
+      'select' in (navigator as any).contacts;
+    if (supportsContactPicker) {
       setShowSyncModal(true);
-      supabase.auth.updateUser({ data: { contact_asked: true } });
+    } else {
+      setShowContactPickerGuide(true);
     }
   }, [user]);
 
@@ -231,6 +237,7 @@ export default function HomePage() {
         const { data } = await supabase.from('connections').select('*').eq('user_id', user.id);
         setConnections((data as Connection[]) ?? []);
         setSyncResult({ count: rows.length });
+        await supabase.auth.updateUser({ data: { contact_synced: true } });
       }
 
       setSyncLoading(false);
