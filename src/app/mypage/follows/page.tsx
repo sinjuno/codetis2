@@ -90,13 +90,16 @@ export default function FollowsPage() {
     setSearchResult(null);
     setFollowSent(false);
 
-    const { data, error } = await supabase.rpc('search_user_by_email', {
-      search_email: searchEmail.trim(),
-    });
+    const { data: found, error } = await supabase
+      .from('profiles')
+      .select('id, name, email, phone')
+      .ilike('email', searchEmail.trim())
+      .neq('id', user.id)
+      .maybeSingle();
 
-    const found = data?.[0] ?? null;
+    console.log('[search] email:', searchEmail.trim(), 'found:', found, 'error:', error);
 
-    if (error || !found || found.id === user.id) {
+    if (error || !found) {
       setSearchResult('not_found');
     } else {
       setSearchResult(found as FollowUser);
