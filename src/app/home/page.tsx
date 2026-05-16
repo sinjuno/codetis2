@@ -438,27 +438,8 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* ── 관계 현황 대시보드 ── */}
-        <div className="px-7 mt-6">
-          <h3 className="text-[16px] font-bold text-picks-dark mb-3">관계 현황</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="picks-card p-4 text-center">
-              <p className="text-[26px] font-bold" style={{ color: '#D6536D' }}>{thisMonthContacts}</p>
-              <p className="text-[11px] text-gray-400 mt-1 leading-snug">이번 달<br />연락</p>
-            </div>
-            <div className="picks-card p-4 text-center">
-              <p className="text-[26px] font-bold" style={{ color: '#E43D12' }}>{noContactCount}</p>
-              <p className="text-[11px] text-gray-400 mt-1 leading-snug">오래 연락<br />안 한 사람</p>
-            </div>
-            <div className="picks-card p-4 text-center">
-              <p className="text-[16px] font-bold" style={{ color: '#EFB11D' }}>활발</p>
-              <p className="text-[11px] text-gray-400 mt-1 leading-snug">최근<br />활동</p>
-            </div>
-          </div>
-        </div>
-
         {/* ── 빠른 실행 ── */}
-        <div className="px-7 mt-6 mb-4">
+        <div className="px-7 mt-6">
           <h3 className="text-[16px] font-bold text-picks-dark mb-3">빠른 실행</h3>
           <div className="grid grid-cols-2 gap-3">
             <Link href="/contacts/new" className="picks-card p-4 flex items-center gap-3 active:scale-95 transition-transform">
@@ -493,6 +474,25 @@ export default function HomePage() {
               </div>
               <span className="text-[13px] font-semibold text-picks-dark">알림</span>
             </Link>
+          </div>
+        </div>
+
+        {/* ── 관계 현황 대시보드 ── */}
+        <div className="px-7 mt-6 mb-4">
+          <h3 className="text-[16px] font-bold text-picks-dark mb-3">관계 현황</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="picks-card p-4 text-center">
+              <p className="text-[26px] font-bold" style={{ color: '#D6536D' }}>{thisMonthContacts}</p>
+              <p className="text-[11px] text-gray-400 mt-1 leading-snug">이번 달<br />연락</p>
+            </div>
+            <div className="picks-card p-4 text-center">
+              <p className="text-[26px] font-bold" style={{ color: '#E43D12' }}>{noContactCount}</p>
+              <p className="text-[11px] text-gray-400 mt-1 leading-snug">오래 연락<br />안 한 사람</p>
+            </div>
+            <div className="picks-card p-4 text-center">
+              <p className="text-[16px] font-bold" style={{ color: '#EFB11D' }}>활발</p>
+              <p className="text-[11px] text-gray-400 mt-1 leading-snug">최근<br />활동</p>
+            </div>
           </div>
         </div>
 
