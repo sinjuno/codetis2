@@ -88,14 +88,14 @@ function buildBannerItems(connections: Connection[], events: CalendarEvent[]): B
         type: 'appointment' as const,
         name: ev.title,
         phone: '',
-        label: diff === 0 ? '오늘 약속 📅' : diff === 1 ? '내일 약속 📅' : `약속 D-${diff}`,
+        label: diff === 0 ? '약속 D-day 📅' : `약속 D-${diff} 📅`,
         sub: ev.memo ?? '',
         color: ev.color,
         daysUntil: diff,
         gradient: `linear-gradient(135deg, ${ev.color} 0%, #1a1a1a 60%)`,
       };
     })
-    .filter((ev) => ev.daysUntil >= 0 && ev.daysUntil <= 14)
+    .filter((ev) => ev.daysUntil >= 0 && ev.daysUntil <= 7)
     .sort((a, b) => a.daysUntil - b.daysUntil);
 
   return [...birthdayItems, ...appointmentItems]
