@@ -10,7 +10,7 @@ import BottomNav from '@/components/BottomNav';
 import { getDaysAgo, getDaysUntilBirthday, formatBirthday } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
-import type { Connection, CalendarEvent } from '@/lib/types';
+import type { Connection } from '@/lib/types';
 
 const bannerGradients = [
   'linear-gradient(135deg, #D6536D 0%, #E43D12 100%)',
@@ -27,25 +27,7 @@ type BannerItem = {
   phone?: string;
 };
 
-function buildRecommendedBanners(connections: Connection[], events: CalendarEvent[]): BannerItem[] {
-  const now = new Date();
-
-  // 생일 제외한 캘린더 기반 이벤트 연관 인물
-  const eventBased: BannerItem[] = events
-    .filter((ev) => {
-      const evDate = new Date(ev.date);
-      const diff = Math.ceil((evDate.getTime() - now.getTime()) / 86400000);
-      return diff >= 0 && diff <= 14;
-    })
-    .slice(0, 3)
-    .map((ev, idx) => ({
-      id: `ev-${ev.id}`,
-      name: ev.title,
-      sub: ev.memo ?? '일정이 있어요',
-      label: '캘린더 일정',
-      gradient: bannerGradients[idx % bannerGradients.length],
-    }));
-
+function buildRecommendedBanners(connections: Connection[]): BannerItem[] {
   // 오래 연락 안 한 인물
   const noContact: BannerItem[] = connections
     .filter((c) => {
@@ -63,7 +45,7 @@ function buildRecommendedBanners(connections: Connection[], events: CalendarEven
       phone: c.phone,
     }));
 
-  const items = [...eventBased, ...noContact].slice(0, 3);
+  const items = noContact.slice(0, 3);
 
   if (items.length === 0) {
     return [{
@@ -85,7 +67,6 @@ export default function ContactsPage() {
   const [currentBanner, setCurrentBanner] = useState(0);
   const [search, setSearch] = useState('');
   const [connections, setConnections] = useState<Connection[]>([]);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [categories, setCategories] = useState<string[]>(['전체', '친구', '가족', '비즈니스']);
   const [dataLoading, setDataLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
@@ -116,16 +97,12 @@ export default function ContactsPage() {
     if (!user) return;
     const fetchData = async () => {
       setDataLoading(true);
-      const today = new Date().toISOString().split('T')[0];
-      const twoWeeksLater = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
 
-      const [{ data: conns }, { data: cats }, { data: evs }] = await Promise.all([
+      const [{ data: conns }, { data: cats }] = await Promise.all([
         supabase.from('connections').select('*').eq('user_id', user.id).order('name'),
         supabase.from('user_categories').select('*').eq('user_id', user.id),
-        supabase.from('calendar_events').select('*').eq('user_id', user.id).gte('date', today).lte('date', twoWeeksLater),
       ]);
       setConnections((conns as Connection[]) ?? []);
-      setEvents((evs as CalendarEvent[]) ?? []);
       const customCats = (cats ?? []).map((c: { name: string }) => c.name);
       const allCats = ['전체', '친구', '가족', '비즈니스', ...customCats.filter((c: string) => !['친구', '가족', '비즈니스'].includes(c))];
       setCategories(allCats);
@@ -134,7 +111,7 @@ export default function ContactsPage() {
     fetchData();
   }, [user]);
 
-  const bannerItems = buildRecommendedBanners(connections, events);
+  const bannerItems = buildRecommendedBanners(connections);
 
   useEffect(() => {
     if (bannerItems.length <= 1) return;
