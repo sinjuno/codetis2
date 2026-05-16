@@ -95,7 +95,7 @@ function buildBannerItems(connections: Connection[], events: CalendarEvent[]): B
         gradient: `linear-gradient(135deg, ${ev.color} 0%, #1a1a1a 60%)`,
       };
     })
-    .filter((ev) => ev.daysUntil >= 0 && ev.daysUntil <= 7)
+    .filter((ev) => ev.daysUntil >= 0 && ev.daysUntil <= 6)
     .sort((a, b) => a.daysUntil - b.daysUntil);
 
   return [...birthdayItems, ...appointmentItems]
@@ -155,7 +155,7 @@ export default function HomePage() {
     const fetchData = async () => {
       setDataLoading(true);
       const today = new Date().toISOString().split('T')[0];
-      const twoWeeksLater = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+      const twoWeeksLater = new Date(Date.now() + 6 * 86400000).toISOString().split('T')[0];
 
       const [{ data: conns }, { data: evs }] = await Promise.all([
         supabase.from('connections').select('*').eq('user_id', user.id),
