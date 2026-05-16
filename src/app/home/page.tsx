@@ -441,7 +441,7 @@ export default function HomePage() {
         {/* ── 빠른 실행 ── */}
         <div className="px-7 mt-6">
           <h3 className="text-[16px] font-bold text-picks-dark mb-3">빠른 실행</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             <Link href="/contacts/new" className="picks-card p-4 flex items-center gap-3 active:scale-95 transition-transform">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#fdf0f2' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D6536D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -465,14 +465,6 @@ export default function HomePage() {
                 </svg>
               </div>
               <span className="text-[13px] font-semibold text-picks-dark">일정 추가</span>
-            </Link>
-            <Link href="/notifications" className="picks-card p-4 flex items-center gap-3 active:scale-95 transition-transform">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#fdf0f2' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D6536D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
-                </svg>
-              </div>
-              <span className="text-[13px] font-semibold text-picks-dark">알림</span>
             </Link>
           </div>
         </div>
