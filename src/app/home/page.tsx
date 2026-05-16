@@ -155,7 +155,7 @@ export default function HomePage() {
     const fetchData = async () => {
       setDataLoading(true);
       const today = new Date().toISOString().split('T')[0];
-      const twoWeeksLater = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+      const twoWeeksLater = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
       const [{ data: conns }, { data: evs }] = await Promise.all([
         supabase.from('connections').select('*').eq('user_id', user.id),
@@ -349,7 +349,8 @@ export default function HomePage() {
               {bannerItems.map((item, idx) => (
                 <div
                   key={item.id}
-                  className="absolute inset-0 transition-opacity duration-500 flex flex-col justify-between"
+                  onClick={() => router.push('/contacts/bulk-send')}
+                  className="absolute inset-0 transition-opacity duration-500 flex flex-col justify-between cursor-pointer"
                   style={{
                     background: item.gradient,
                     opacity: idx === current ? 1 : 0,
