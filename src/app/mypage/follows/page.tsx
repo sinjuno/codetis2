@@ -90,22 +90,21 @@ export default function FollowsPage() {
     setSearchResult(null);
     setFollowSent(false);
 
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, name, email, phone')
-      .eq('email', searchEmail.trim().toLowerCase())
-      .single();
+    const { data, error } = await supabase.rpc('search_user_by_email', {
+      search_email: searchEmail.trim(),
+    });
 
-    if (!data || data.id === user.id) {
+    const found = data?.[0] ?? null;
+
+    if (error || !found || found.id === user.id) {
       setSearchResult('not_found');
     } else {
-      setSearchResult(data as FollowUser);
-      // 이미 팔로우 중인지 확인
+      setSearchResult(found as FollowUser);
       const { data: existing } = await supabase
         .from('follows')
         .select('id')
         .eq('follower_id', user.id)
-        .eq('following_id', data.id)
+        .eq('following_id', found.id)
         .maybeSingle();
       if (existing) setFollowSent(true);
     }
