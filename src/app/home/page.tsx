@@ -379,7 +379,7 @@ export default function HomePage() {
                     {item.phone && (
                       <div className="flex gap-2 mb-1">
                         <button
-                          onClick={() => showCall(item.phone)}
+                          onClick={(e) => { e.stopPropagation(); showCall(item.phone); }}
                           className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform"
                           style={{ background: 'rgba(255,255,255,0.25)' }}
                         >
@@ -388,7 +388,7 @@ export default function HomePage() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => showSms(item.phone)}
+                          onClick={(e) => { e.stopPropagation(); showSms(item.phone); }}
                           className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform"
                           style={{ background: 'rgba(255,255,255,0.25)' }}
                         >
