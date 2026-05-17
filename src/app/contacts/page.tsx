@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TopBar from '@/components/TopBar';
@@ -12,65 +12,16 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
 import type { Connection } from '@/lib/types';
 
-const bannerGradients = [
-  'linear-gradient(135deg, #D6536D 0%, #E43D12 100%)',
-  'linear-gradient(135deg, #EFB11D 0%, #D6536D 100%)',
-  'linear-gradient(135deg, #E43D12 0%, #D6536D 80%)',
-];
-
-type BannerItem = {
-  id: string;
-  name: string;
-  sub: string;
-  label: string;
-  gradient: string;
-  phone?: string;
-};
-
-function buildRecommendedBanners(connections: Connection[]): BannerItem[] {
-  // 오래 연락 안 한 인물
-  const noContact: BannerItem[] = connections
-    .filter((c) => {
-      if (!c.last_contact) return true;
-      const days = Math.floor((Date.now() - new Date(c.last_contact).getTime()) / 86400000);
-      return days > 30;
-    })
-    .slice(0, 3)
-    .map((c, idx) => ({
-      id: `nc-${c.id}`,
-      name: c.name,
-      sub: `${c.last_contact ? getDaysAgo(c.last_contact) : '연락 기록 없음'} — 안부를 전해보세요`,
-      label: '연락 추천',
-      gradient: bannerGradients[idx % bannerGradients.length],
-      phone: c.phone,
-    }));
-
-  const items = noContact.slice(0, 3);
-
-  if (items.length === 0) {
-    return [{
-      id: 'default',
-      name: '소중한 관계를 시작해보세요',
-      sub: '연락처를 추가하고 관계를 관리해보세요',
-      label: 'PICKS',
-      gradient: bannerGradients[0],
-    }];
-  }
-
-  return items;
-}
 
 export default function ContactsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [activeCategory, setActiveCategory] = useState('전체');
-  const [currentBanner, setCurrentBanner] = useState(0);
   const [search, setSearch] = useState('');
   const [connections, setConnections] = useState<Connection[]>([]);
   const [categories, setCategories] = useState<string[]>(['전체', '친구', '가족', '비즈니스']);
   const [dataLoading, setDataLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (authLoading) return;
@@ -111,16 +62,6 @@ export default function ContactsPage() {
     fetchData();
   }, [user]);
 
-  const bannerItems = buildRecommendedBanners(connections);
-
-  useEffect(() => {
-    if (bannerItems.length <= 1) return;
-    intervalRef.current = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % bannerItems.length);
-    }, 3000);
-    return () => clearInterval(intervalRef.current);
-  }, [bannerItems.length]);
-
   const allCategories = [...categories, '+'];
   const byCat = activeCategory === '전체'
     ? connections
@@ -156,48 +97,6 @@ export default function ContactsPage() {
             </button>
           </div>
         )}
-
-        {/* 상단: 대상 리스트 추천 배너 */}
-        <Link href="/contacts/bulk-send" className="block mt-4">
-          <div className="relative overflow-hidden" style={{ height: '110px' }}>
-            {bannerItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className="absolute inset-0 px-7 flex flex-col justify-center transition-opacity duration-500"
-                style={{
-                  background: item.gradient,
-                  opacity: idx === currentBanner ? 1 : 0,
-                  pointerEvents: idx === currentBanner ? 'auto' : 'none',
-                }}
-              >
-                <span
-                  className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full mb-2 self-start"
-                  style={{ background: 'rgba(255,255,255,0.22)', color: 'white' }}
-                >
-                  {item.label}
-                </span>
-                <p className="text-white text-[18px] font-bold leading-snug">{item.name}</p>
-                <p className="text-white/70 text-[12px] mt-0.5">{item.sub}</p>
-              </div>
-            ))}
-          </div>
-          {bannerItems.length > 1 && (
-            <div className="flex justify-center gap-1.5 mt-2">
-              {bannerItems.map((_, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    width: idx === currentBanner ? '16px' : '6px',
-                    height: '6px',
-                    borderRadius: '3px',
-                    background: idx === currentBanner ? '#D6536D' : '#e0e0e0',
-                    transition: 'all 0.3s',
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </Link>
 
         {/* 검색 */}
         <div className="mt-4 px-7">
