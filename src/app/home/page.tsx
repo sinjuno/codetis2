@@ -484,7 +484,7 @@ export default function HomePage() {
               <p className="text-[11px] text-gray-400 mt-1 leading-snug">오래 연락<br />안 한 사람</p>
             </div>
             <div className="picks-card p-4 text-center">
-              <p className="text-[16px] font-bold" style={{ color: '#EFB11D' }}>활발</p>
+              <p className="text-[26px] font-bold" style={{ color: '#EFB11D' }}>활발</p>
               <p className="text-[11px] text-gray-400 mt-1 leading-snug">최근<br />활동</p>
             </div>
           </div>
