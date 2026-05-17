@@ -11,21 +11,8 @@ import { useAuth } from '@/lib/useAuth';
 const AVATAR_COLORS = ['#D6536D', '#EFB11D', '#E43D12', '#FFA2B6', '#4CAF50', '#2196F3'];
 const BASE_CATEGORIES = ['친구', '가족', '비즈니스'];
 
-async function fetchOneContact(): Promise<{ name: string; phone: string } | null> {
-  if (typeof navigator !== 'undefined' && 'contacts' in navigator) {
-    try {
-      // @ts-expect-error contacts API is experimental
-      const raw = await navigator.contacts.select(['name', 'tel'], { multiple: false });
-      if (!raw.length) return null;
-      return {
-        name: raw[0].name?.[0] ?? '',
-        phone: formatPhone(raw[0].tel?.[0] ?? ''),
-      };
-    } catch {
-      return null;
-    }
-  }
-  return null;
+function supportsContactPicker() {
+  return typeof navigator !== 'undefined' && 'contacts' in navigator && 'select' in (navigator as any).contacts;
 }
 
 export default function NewContactPage() {
@@ -63,15 +50,25 @@ export default function NewContactPage() {
     setForm((p) => ({ ...p, phone: formatPhone(e.target.value) }));
 
   const handleImport = async () => {
-    setImporting(true);
-    const contact = await fetchOneContact();
-    setImporting(false);
-    if (!contact) {
+    if (!supportsContactPicker()) {
       showToast('이 기기에서는 연락처 불러오기를 지원하지 않아요.');
       return;
     }
-    setForm((p) => ({ ...p, name: contact.name, phone: contact.phone }));
-    showToast('연락처를 불러왔습니다.');
+    setImporting(true);
+    try {
+      // @ts-expect-error contacts API is experimental
+      const raw = await (navigator as any).contacts.select(['name', 'tel'], { multiple: false });
+      setImporting(false);
+      if (!raw.length) return;
+      setForm((p) => ({
+        ...p,
+        name: raw[0].name?.[0] ?? '',
+        phone: formatPhone(raw[0].tel?.[0] ?? ''),
+      }));
+      showToast('연락처를 불러왔습니다.');
+    } catch {
+      setImporting(false);
+    }
   };
 
   const confirmNewCategory = () => {
