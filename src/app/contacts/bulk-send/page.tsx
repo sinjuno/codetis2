@@ -8,7 +8,17 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
 import type { Connection } from '@/lib/types';
 
+const SEASON_TEMPLATES: { label: string; text: string }[] = [
+  { label: '설날', text: '기다리던 설 연휴, 걱정은 내려놓고 맛있는 음식 가득 드시며 포근하게 충전하세요. 새해 복 많이 받으세요!' },
+  { label: '추석', text: '선선한 바람과 함께 찾아온 추석입니다. 보름달처럼 마음 넉넉하고 여유로운 명절 보내세요.' },
+  { label: '어버이날', text: '늘 아낌없는 사랑을 주셔서 감사합니다. 부모님의 자식이라 행복해요. 오래오래 건강하세요!' },
+  { label: '스승의날', text: '따뜻한 가르침으로 길잡이가 되어주신 선생님, 은혜에 늘 감사드리며 항상 건강하시길 바랍니다.' },
+  { label: '수능', text: '지금까지 노력한 시간들을 믿어봐. 너의 페이스대로 후회 없이 쏟아내고 오길, 화이팅!' },
+  { label: '크리스마스', text: '반짝이는 조명처럼 설렘 가득한 성탄절 보내세요. 소중한 사람들과 가장 행복한 하루 되길!' },
+];
+
 const TEMPLATE_DATA: Record<string, string[]> = {
+  '시즌 안부': SEASON_TEMPLATES.map((s) => s.text),
   '기본 안부': [
     '안녕하세요! 잘 지내고 계신가요? 요즘 바쁘신 것 같아 연락 못 드렸는데 문득 생각이 나서 연락드립니다 😊',
     '오랜만에 연락드려요! 요즘 어떻게 지내세요? 별일 없으시죠? 생각나서 인사 드리고 싶었어요.',
@@ -217,6 +227,14 @@ export default function BulkSendPage() {
                     : '0 2px 8px rgba(0,0,0,0.06)',
                 }}
               >
+                {selectedCategory === '시즌 안부' && (
+                  <p
+                    className="text-[10px] font-bold mb-1.5"
+                    style={{ color: selectedTemplateIdx === idx ? 'rgba(255,255,255,0.75)' : '#D6536D' }}
+                  >
+                    {SEASON_TEMPLATES[idx].label}
+                  </p>
+                )}
                 <p
                   className="text-[12px] leading-relaxed line-clamp-4"
                   style={{ color: selectedTemplateIdx === idx ? 'white' : '#444' }}
