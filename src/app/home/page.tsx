@@ -201,6 +201,14 @@ export default function HomePage() {
     return days > 30;
   }).length;
 
+  const activityLabel = (() => {
+    if (connections.length === 0) return { text: '저조', color: '#9e9e9e' };
+    const ratio = thisMonthContacts / connections.length;
+    if (ratio >= 0.4 || thisMonthContacts >= 5) return { text: '활발', color: '#EFB11D' };
+    if (ratio >= 0.15 || thisMonthContacts >= 2) return { text: '보통', color: '#4CAF50' };
+    return { text: '저조', color: '#E43D12' };
+  })();
+
   const handleContactSync = async () => {
     if (!user) return;
 
@@ -484,7 +492,7 @@ export default function HomePage() {
               <p className="text-[11px] text-gray-400 mt-1 leading-snug">오래 연락<br />안 한 사람</p>
             </div>
             <div className="picks-card p-4 text-center">
-              <p className="text-[26px] font-bold" style={{ color: '#EFB11D' }}>활발</p>
+              <p className="text-[26px] font-bold" style={{ color: activityLabel.color }}>{activityLabel.text}</p>
               <p className="text-[11px] text-gray-400 mt-1 leading-snug">최근<br />활동</p>
             </div>
           </div>
