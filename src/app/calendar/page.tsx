@@ -40,6 +40,23 @@ const FIXED_HOLIDAYS: { month: number; day: number; title: string; color: string
   { month: 12, day: 14, title: '허그데이 🤗',   color: '#D6536D', isPublic: false },
 ];
 
+// 대체공휴일
+const SUBSTITUTE_HOLIDAYS: Record<string, { title: string; color: string }> = {
+  '2024-02-12': { title: '설날 대체공휴일', color: '#E43D12' },
+  '2024-05-06': { title: '어린이날 대체공휴일', color: '#E43D12' },
+  '2025-03-03': { title: '삼일절 대체공휴일', color: '#E43D12' },
+  '2025-05-06': { title: '부처님오신날 대체공휴일', color: '#EFB11D' },
+  '2026-03-02': { title: '삼일절 대체공휴일', color: '#E43D12' },
+  '2026-05-25': { title: '부처님오신날 대체공휴일', color: '#EFB11D' },
+  '2026-08-17': { title: '광복절 대체공휴일', color: '#E43D12' },
+  '2026-09-28': { title: '추석 대체공휴일', color: '#E43D12' },
+  '2026-10-05': { title: '개천절 대체공휴일', color: '#E43D12' },
+  '2027-02-09': { title: '설날 대체공휴일', color: '#E43D12' },
+  '2027-08-16': { title: '광복절 대체공휴일', color: '#E43D12' },
+  '2027-10-04': { title: '개천절 대체공휴일', color: '#E43D12' },
+  '2027-10-11': { title: '한글날 대체공휴일', color: '#E43D12' },
+};
+
 // 음력 공휴일 (연도별 고정)
 const LUNAR_HOLIDAYS: Record<string, { title: string; color: string }> = {
   '2024-02-10': { title: '설날 🏮', color: '#E43D12' },
@@ -68,6 +85,11 @@ function getHolidayEvents(year: number): AnyEvent[] {
       result.push({ id: `lunar-${date}`, title: h.title, date, color: h.color });
     }
   });
+  Object.entries(SUBSTITUTE_HOLIDAYS).forEach(([date, h]) => {
+    if (date.startsWith(String(year))) {
+      result.push({ id: `sub-${date}`, title: h.title, date, color: h.color });
+    }
+  });
   return result;
 }
 
@@ -77,6 +99,9 @@ function getPublicHolidayDates(year: number): Set<string> {
     dates.add(`${year}-${padZero(h.month)}-${padZero(h.day)}`);
   });
   Object.entries(LUNAR_HOLIDAYS).forEach(([date]) => {
+    if (date.startsWith(String(year))) dates.add(date);
+  });
+  Object.entries(SUBSTITUTE_HOLIDAYS).forEach(([date]) => {
     if (date.startsWith(String(year))) dates.add(date);
   });
   return dates;
