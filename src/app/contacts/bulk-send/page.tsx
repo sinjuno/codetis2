@@ -64,6 +64,7 @@ export default function BulkSendPage() {
   const [customText, setCustomText] = useState(TEMPLATE_DATA[BASE_CATEGORIES[0]][0]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [dataLoading, setDataLoading] = useState(true);
+  const [userTplCounts, setUserTplCounts] = useState<Record<string, number>>({});
   const [activeContactCategory, setActiveContactCategory] = useState('전체');
   const [contactCategories, setContactCategories] = useState<string[]>(['전체', '친구', '가족', '비즈니스']);
 
@@ -105,6 +106,7 @@ export default function BulkSendPage() {
         }
         setMergedTemplateData(merged);
         setTemplateCategories(Object.keys(merged));
+        setUserTplCounts(Object.fromEntries(Object.entries(userByCategory).map(([k, v]) => [k, v.length])));
         const firstCat = Object.keys(merged)[0];
         setSelectedCategory(firstCat);
         setCustomText(merged[firstCat][0] ?? '');
@@ -252,12 +254,12 @@ export default function BulkSendPage() {
                     : '0 2px 8px rgba(0,0,0,0.06)',
                 }}
               >
-                {selectedCategory === '시즌 안부' && (
+                {selectedCategory === '시즌 안부' && idx >= (userTplCounts['시즌 안부'] ?? 0) && (
                   <p
                     className="text-[10px] font-bold mb-1.5"
                     style={{ color: selectedTemplateIdx === idx ? 'rgba(255,255,255,0.75)' : '#D6536D' }}
                   >
-                    {SEASON_TEMPLATES[idx].label}
+                    {SEASON_TEMPLATES[idx - (userTplCounts['시즌 안부'] ?? 0)]?.label}
                   </p>
                 )}
                 <p
