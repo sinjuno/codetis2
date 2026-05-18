@@ -91,17 +91,24 @@ export default function BulkSendPage() {
       setContactCategories([...baseCats, ...customCats.filter((c: string) => !baseCats.slice(1).includes(c))]);
 
       if (userTpls && userTpls.length > 0) {
-        const merged: Record<string, string[]> = {};
-        for (const key of BASE_CATEGORIES) merged[key] = [...TEMPLATE_DATA[key]];
+        const userByCategory: Record<string, string[]> = {};
         for (const tpl of userTpls as { category: string; content: string }[]) {
-          if (merged[tpl.category]) {
-            merged[tpl.category] = [...merged[tpl.category], tpl.content];
-          } else {
-            merged[tpl.category] = [tpl.content];
-          }
+          if (!userByCategory[tpl.category]) userByCategory[tpl.category] = [];
+          userByCategory[tpl.category].push(tpl.content);
+        }
+        const merged: Record<string, string[]> = {};
+        for (const key of BASE_CATEGORIES) {
+          merged[key] = [...(userByCategory[key] ?? []), ...TEMPLATE_DATA[key]];
+        }
+        for (const cat of Object.keys(userByCategory)) {
+          if (!merged[cat]) merged[cat] = userByCategory[cat];
         }
         setMergedTemplateData(merged);
         setTemplateCategories(Object.keys(merged));
+        const firstCat = Object.keys(merged)[0];
+        setSelectedCategory(firstCat);
+        setCustomText(merged[firstCat][0] ?? '');
+        setSelectedTemplateIdx(0);
       }
 
       setDataLoading(false);
