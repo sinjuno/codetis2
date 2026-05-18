@@ -232,12 +232,6 @@ export default function OnboardingPage() {
         >
           로그인
         </Link>
-        <button
-          onClick={() => setShowSyncPopup(true)}
-          className="text-center text-[13px] font-medium text-gray-400 py-2"
-        >
-          연락처만 연동하기
-        </button>
       </div>
 
       {/* 연동 방식 선택 팝업 */}
