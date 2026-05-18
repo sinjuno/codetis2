@@ -51,15 +51,17 @@ const TEMPLATE_DATA: Record<string, string[]> = {
   ],
 };
 
-const CATEGORIES = Object.keys(TEMPLATE_DATA);
+const BASE_CATEGORIES = Object.keys(TEMPLATE_DATA);
 
 export default function BulkSendPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  const [mergedTemplateData, setMergedTemplateData] = useState<Record<string, string[]>>(TEMPLATE_DATA);
+  const [templateCategories, setTemplateCategories] = useState<string[]>(BASE_CATEGORIES);
+  const [selectedCategory, setSelectedCategory] = useState(BASE_CATEGORIES[0]);
   const [selectedTemplateIdx, setSelectedTemplateIdx] = useState(0);
-  const [customText, setCustomText] = useState(TEMPLATE_DATA[CATEGORIES[0]][0]);
+  const [customText, setCustomText] = useState(TEMPLATE_DATA[BASE_CATEGORIES[0]][0]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [dataLoading, setDataLoading] = useState(true);
   const [activeContactCategory, setActiveContactCategory] = useState('전체');
@@ -78,20 +80,36 @@ export default function BulkSendPage() {
     if (!user) return;
     const fetchData = async () => {
       setDataLoading(true);
-      const [{ data: conns }, { data: cats }] = await Promise.all([
+      const [{ data: conns }, { data: cats }, { data: userTpls }] = await Promise.all([
         supabase.from('connections').select('*').eq('user_id', user.id).order('name'),
         supabase.from('user_categories').select('name').eq('user_id', user.id),
+        supabase.from('message_templates').select('category, content').eq('user_id', user.id).order('created_at'),
       ]);
       setConnections((conns as Connection[]) ?? []);
       const customCats = (cats ?? []).map((c: { name: string }) => c.name);
       const baseCats = ['전체', '친구', '가족', '비즈니스'];
       setContactCategories([...baseCats, ...customCats.filter((c: string) => !baseCats.slice(1).includes(c))]);
+
+      if (userTpls && userTpls.length > 0) {
+        const merged: Record<string, string[]> = {};
+        for (const key of BASE_CATEGORIES) merged[key] = [...TEMPLATE_DATA[key]];
+        for (const tpl of userTpls as { category: string; content: string }[]) {
+          if (merged[tpl.category]) {
+            merged[tpl.category] = [...merged[tpl.category], tpl.content];
+          } else {
+            merged[tpl.category] = [tpl.content];
+          }
+        }
+        setMergedTemplateData(merged);
+        setTemplateCategories(Object.keys(merged));
+      }
+
       setDataLoading(false);
     };
     fetchData();
   }, [user]);
 
-  const currentTemplates = TEMPLATE_DATA[selectedCategory];
+  const currentTemplates = mergedTemplateData[selectedCategory] ?? [];
 
   const filteredConnections = activeContactCategory === '전체'
     ? connections
@@ -102,7 +120,7 @@ export default function BulkSendPage() {
   const handleCategoryChange = (cat: string) => {
     setSelectedCategory(cat);
     setSelectedTemplateIdx(0);
-    setCustomText(TEMPLATE_DATA[cat][0]);
+    setCustomText((mergedTemplateData[cat] ?? [])[0] ?? '');
     templateScrollRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
   };
 
@@ -190,7 +208,7 @@ export default function BulkSendPage() {
             ref={categoryScrollRef}
             className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4"
           >
-            {CATEGORIES.map((cat) => (
+            {templateCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => handleCategoryChange(cat)}
