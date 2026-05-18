@@ -152,7 +152,7 @@ export default function TemplatesPage() {
               <div className="mb-3">
                 <label className="block text-[12px] font-medium text-gray-500 mb-1">카테고리</label>
                 <div className="flex gap-2 flex-wrap">
-                  {['기본 안부', '친한 친구용', '어색 관계용', '대학생용'].map((cat) => (
+                  {['시즌 안부', '기본 안부', '친한 친구용', '어색 관계용', '대학생용'].map((cat) => (
                     <button
                       key={cat}
                       type="button"
